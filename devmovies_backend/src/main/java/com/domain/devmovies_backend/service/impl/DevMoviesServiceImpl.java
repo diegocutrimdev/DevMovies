@@ -1,6 +1,6 @@
 package com.domain.devmovies_backend.service.impl;
 
-import com.domain.devmovies_backend.exception.MovieNotFoundException;
+import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
@@ -12,8 +12,11 @@ import org.springframework.core.ParameterizedTypeReference;
 import com.domain.devmovies_backend.service.DevMoviesService;
 import com.domain.devmovies_backend.dto.ExternalApplicationDto;
 import com.domain.devmovies_backend.enums.ExternalApplicationGenre;
+import com.domain.devmovies_backend.exception.MovieNotFoundException;
 
 import java.util.*;
+
+import static com.domain.devmovies_backend.validation.DevMoviesValidator.*;
 
 @Service
 @RequiredArgsConstructor
@@ -25,7 +28,15 @@ public class DevMoviesServiceImpl implements DevMoviesService {
     private final RestTemplate restTemplate;
 
     @Override
-    public DevMoviesResponse getMovie(Integer ano, String pais, String idioma, ExternalApplicationGenre genero) {
+    public DevMoviesResponse getMovie(
+            @Nullable Integer ano,
+            @Nullable String pais,
+            @Nullable String idioma,
+            @Nullable ExternalApplicationGenre genero) {
+
+        validarAno(ano);
+        validarIdioma(idioma);
+        validarPais(pais);
 
         StringBuilder url = new StringBuilder("https://api.themoviedb.org/3/discover/movie");
         url.append("?api_key=").append(key);
