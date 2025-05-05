@@ -1,11 +1,13 @@
 package com.domain.devmovies_backend.service.impl;
 
+import com.domain.devmovies_backend.exception.MovieNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 import com.domain.devmovies_backend.dto.DevMoviesResponse;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import com.domain.devmovies_backend.service.DevMoviesService;
 import com.domain.devmovies_backend.dto.ExternalApplicationDto;
@@ -17,14 +19,16 @@ import java.util.*;
 @RequiredArgsConstructor
 public class DevMoviesServiceImpl implements DevMoviesService {
 
+    @Value("${api.devmovies_backend.key}")
+    public String key;
+
     private final RestTemplate restTemplate;
 
     @Override
     public DevMoviesResponse getMovie(Integer ano, String pais, String idioma, ExternalApplicationGenre genero) {
 
         StringBuilder url = new StringBuilder("https://api.themoviedb.org/3/discover/movie");
-        String apiKey = "a34a59d5d9354d22c9cb7300e4cc9bc4";
-        url.append("?api_key=").append(apiKey);
+        url.append("?api_key=").append(key);
         url.append("&language=pt-BR");
 
         if (ano != null) url.append("&primary_release_year=").append(ano);
@@ -42,7 +46,7 @@ public class DevMoviesServiceImpl implements DevMoviesService {
         List<ExternalApplicationDto.ExternalApplicationAttributesDto> movies = Optional.ofNullable(response.getBody())
                 .map(ExternalApplicationDto::getList).orElse(Collections.emptyList());
 
-        if (movies.isEmpty()) throw new RuntimeException("Nenhum filme encontrado com os filtros fornecidos.");
+        if (movies.isEmpty()) throw new MovieNotFoundException("Nenhum filme encontrado com os filtros fornecidos.");
         var randomMovie = movies.get(new Random().nextInt(movies.size()));
 
         return new DevMoviesResponse(randomMovie.getMovie(), randomMovie.getPlot(), randomMovie.getReleaseDate());
